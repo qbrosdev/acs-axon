@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <th:block th:include="fragments/Layout :: head_basic">Imported Content!</th:block>
+    <title th:text="#{per.title}"></title>
+</head>
+
+<!--Add Modal-->
+<div aria-hidden="true" aria-labelledby="addModalLabel" class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--   Modal Head         -->
+            <div class="modal-header" id="addModalLabel">
+                <th:block th:replace="fragments/components :: dialogHeader('Add')"></th:block>
+            </div>
+            <form class="needs-validation" id="addModalForm" novalidate th:action="@{/manager/personnel/add}">
+                <!--   Modal Body         -->
+                <div class="modal-body">
+                    <div th:replace="fragments/components::validInput(label='Personnel Number',type='number', name='personnel_id')"></div>
+                    <div th:replace="fragments/components::validInput(label='First Name', name='firstName')"></div>
+                    <div th:replace="fragments/components::validInput(label='Last Name',name='lastName')"></div>
+                    <div th:replace="fragments/components::validInput(label='Email',type='email', name='email')"></div>
+                </div>
+                <!--   Modal Footer         -->
+                <div class="modal-footer">
+                    <th:block th:replace="fragments/components :: createDialogConfirm"></th:block>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Edit Modal-->
+<div aria-hidden="true" aria-labelledby="editModalLabel" class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--  Modal Head         -->
+            <div class="modal-header" id="editModalLabel">
+                <th:block th:replace="fragments/components :: dialogHeader('Edit')"></th:block>
+            </div>
+            <form class="needs-validation" id="editModalForm" novalidate th:action="@{/manager/personnel/edit}">
+                <!--   Modal Body         -->
+                <div class="modal-body" id="editContent">
+                    <div th:fragment="editDialog">
+                        <input hidden name="personnel_id" th:value="${editPersonnel.personnel_id}">
+                        <div th:replace="fragments/components::validInput(label='First Name', name='firstName', val=${editPersonnel.firstName})"></div>
+                        <div th:replace="fragments/components::validInput(label='Last Name',name='lastName', val=${editPersonnel.lastName})"></div>
+                        <div th:replace="fragments/components::validInput(label='Email',type='email', name='email', val=${editPersonnel.email})"></div>
+                    </div>
+                </div>
+                <!--   Modal Footer         -->
+                <div class="modal-footer">
+                    <th:block th:replace="fragments/components :: editDialogConfirm"></th:block>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Delete Confirm Modal-->
+<div aria-hidden="true" aria-labelledby="deleteModalLabel" class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <th:block th:replace="fragments/components :: dialogHeaderDanger('Delete')"></th:block>
+            </div>
+            <form id="deleteModalForm" th:action="@{/manager/personnel/delete}">
+                <div class="modal-body">
+                    <input hidden name="personnel_id"/>
+                    <div class="mb-3">
+                        <div class="modal-body">Confirm <strong>Delete</strong>?</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <th:block th:replace="fragments/components :: dialogConfirm"></th:block>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<body class="g-sidenav-show  bg-gray-200">
+
+<!-- Side Nav   -->
+<aside th:replace="fragments/Navbars :: nav_dashboard_side"></aside>
+
+<main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <!-- Nav   -->
+    <nav th:replace="fragments/Navbars :: nav_top(#{per.nav.title},#{per.nav.crum})"></nav>
+    <!--Personnel List-->
+    <div class="container pt-3">
+        <div class="card h-100">
+            <div class="card-header pb-0">
+                <div class="row mb-2">
+                    <div class="col-6 d-flex align-items-center">
+                        <h5 class="mb-0 text-capitalize">Personnel Management</h5>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button class="btn bg-outline-dark mb-0 shadow-2-soft" data-bs-target="#addModal"
+                                data-bs-toggle="modal" th:inline="text" type="button">[[${'Add Personnel'}]]
+                            <i class="material-icons text-sm text-danger">add</i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="personnelList" th:fragment="content">
+
+                <div class="card-body">
+                    <div class="col-md-9 d" th:if="${error != null}">
+                        <div class="alert alert-warning" role="alert" th:text="${error}">...</div>
+                    </div>
+                    <!--    Content        -->
+                    <div th:if="${personnelPagedModel.content.size() == 0}">No Persons Available</div>
+
+                    <ul class="list-group" th:each="per, iStat : ${personnelPagedModel.content}">
+
+                        <li class="list-group-item personnelItem border-0 d-flex p-2 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                                <h6 class="mb-3 text-sm">
+                                            <span class="personnelListItemInfoFirstName text-capitalize"
+                                                  th:text="${per.firstName}"></span>
+                                    <span class="personnelListItemInfoLastName text-capitalize"
+                                          th:text="${per.lastName}"></span>
+                                </h6>
+                                <th:block
+                                        th:replace="fragments/components :: KeyValue('Email',${per.email})"></th:block>
+                                <th:block
+                                        th:replace="fragments/components :: KeyValueWithClassSelector('Personnel Number',${per.personnel_id},'personnelListItemInfoPid')"></th:block>
+                            </div>
+
+                            <div class="ms-auto text-end">
+
+                                <a class="personnelListItemActionDelete btn btn-link text-danger text-gradient px-3 mb-0"
+                                   hidden
+                                   onclick="deleteItem(this);">
+                                    <i class="material-icons text-sm me-2">delete</i>Delete
+                                </a>
+                                <a class="personnelListItemActionEdit btn btn-link text-dark px-3 mb-0"
+                                   onclick="editItem(this);">
+                                    <i class="material-icons text-sm me-2">edit</i>Edit
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-footer">
+                    <!--    Page        -->
+                    <div class="row">
+
+                        <!--                                <div class="col-md-2" style="background-color: #2e7d32">-->
+                        <!--                                    <small>Page Size</small>-->
+                        <!--                                    <select class="ms-2" aria-label="Default select example">-->
+                        <!--                                        <option th:selected="${personnelPagedModel.pagingNav.pageSize}"-->
+                        <!--                                                th:text="${personnelPagedModel.pagingNav.pageSize}"></option>-->
+                        <!--                                        <option value="5">5</option>-->
+                        <!--                                        <option value="10">10</option>-->
+                        <!--                                        <option value="20">20</option>-->
+                        <!--                                        <option value="100">100</option>-->
+                        <!--                                    </select>-->
+                        <!--                                </div>-->
+
+                        <nav aria-label="Personnel search results pages">
+                            <ul class="pagination justify-content-center"
+                                th:if="${personnelPagedModel.pagingNav.totalPages > 1}">
+                                <!--    Prev  -->
+                                <li class="page-item"
+                                    th:classappend="${!personnelPagedModel.pagingNav.isPrevEnabled()? 'disabled' : ''}">
+                                    <a class="page-link"
+                                       th:attr="onclick=|fetchPersonListPage('${personnelPagedModel.pagingNav.pageNumber - 1}')|">&laquo;</a>
+                                </li>
+                                <!--    Numbers  -->
+                                <th:block th:each="item : ${personnelPagedModel.pagingNav.getItems()}">
+                                    <li class="page-item"
+                                        th:classappend="${item.index == personnelPagedModel.pagingNav.pageNumber? 'active' : ''}"
+                                        th:if="${item.pageItemType.name() == 'PAGE'}">
+                                        <a class="page-link"
+                                           th:attr="onclick=|fetchPersonListPage('${item.index}')|"
+                                           th:text="${item.index}">
+                                        </a>
+                                    </li>
+                                    <li class="page-item disabled"
+                                        th:if="${item.pageItemType.name() == 'DOTS'}">
+                                        <a class="page-link" href="#">...</a>
+                                    </li>
+                                </th:block>
+                                <!--    Next  -->
+                                <li class="page-item"
+                                    th:classappend="${!personnelPagedModel.pagingNav.isNextEnabled()? 'disabled' : ''}">
+                                    <a class="page-link"
+                                       th:attr="onclick=|fetchPersonListPage('${personnelPagedModel.pagingNav.pageNumber + 1}')|">&raquo;</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:include="fragments/Layout :: basic_script">Imported Content!</th:block>
+
+<script th:inline="javascript">
+
+    const addEndPoint =/*[[@{/manager/personnel/add}]]*/null;
+    const personnel_list = '/manager/personnel/list';
+    const ur2 = [[${personnelPagedModel.pagingNav.pageSize}]];
+
+    const personnelList = document.getElementById("personnelList");
+    const addModal = $("#addModal");
+    const editModal = $("#editModal");
+    const deleteModal = $("#deleteModal");
+
+    //todo use this
+    var header1 = $('meta[name=_csrf_header]').attr('content');
+    var token1 = $('meta[name=_csrf]').attr('content');
+
+    function search() {
+        fetchPersonListPage(1);
+    }
+
+    function fetchPersonListPage(pageNumber) {
+        const url = personnel_list + '?' + 'idx=' + pageNumber
+        fetchFragment(url, "personnelList")
+    }
+
+    function deleteItem(item) {
+        const personnelId = getCurrentPersonnelId(item);
+        deleteModal.find('.modal-title').text('Delete Personnel: ' + personnelId);
+        deleteModal.find("[name='personnel_id']").val(personnelId);
+        deleteModal.modal('show');
+    }
+
+    function editItem(item) {
+        const personnelId = getCurrentPersonnelId(item);
+        editModal.find('.modal-title').text('Edit Personnel: ' + personnelId);
+        fetch('/manager/personnel/getById' + '?' + $.param({idx: personnelId}), {method: 'get'})
+            .then(response => response.text())
+            .then(data => {
+                $("#editContent").html(data);
+                editModal.modal('show');
+            })
+    }
+
+    function getCurrentPersonnelId(item) {
+        return $(item).closest('.personnelItem').find('.personnelListItemInfoPid').text();
+    }
+
+    $("#addModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#personnelList").html(data);
+                submitBtn.prop('disabled', false);
+                addModal.modal("hide");
+            })
+    });
+
+    $("#editModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#personnelList").html(data);
+                submitBtn.prop('disabled', false);
+                editModal.modal("hide");
+            })
+    });
+
+    $("#deleteModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(), {method: 'post'})
+            .then(response => response.text())
+            .then(data => {
+                $("#personnelList").html(data);
+                submitBtn.prop('disabled', false);
+                deleteModal.modal("hide");
+            })
+    });
+
+    // https://stackoverflow.com/a/67212533/3593084
+    window.addEventListener('DOMContentLoaded', function () {
+        fetchPersonListPage(1);
+    });
+
+</script>
+
+</body>
+
+</html>

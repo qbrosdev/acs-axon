@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <th:block th:include="fragments/Layout :: head_basic">Imported Content!</th:block>
+    <!--  SocketJS -->
+    <script th:src="@{/webjars/sockjs-client/1.0.2/sockjs.min.js}"></script>
+    <!-- StompJS -->
+    <script th:src="@{/webjars/webstomp-client/1.2.6/dist/webstomp.js}"></script>
+    <script th:src="@{/webjars/jquery-template/1.5.7/jquery.loadTemplate.min.js}"></script>
+    <title th:text="#{sentry.title}"></title>
+</head>
+
+<body class="g-sidenav-show  bg-gray-200">
+
+<!-- Side Nav   -->
+<aside th:replace="fragments/Navbars :: nav_dashboard_side"></aside>
+
+<main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <!-- Nav   -->
+    <nav th:replace="fragments/Navbars :: nav_top(#{sentry.nav.title},#{sentry.nav.crum})"></nav>
+    <!--Personnel List-->
+    <div class="container pt-3">
+        <div class="row">
+            <div class="col">
+                <div class="card my-4 h-100">
+                    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+
+                        <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                            <h6 class="text-white text-capitalize ps-3">Sentry Monitor</h6>
+                        </div>
+
+                        <div class="row my-2">
+                            <div class="col-6 d-flex align-items-center">
+                                <h6 class="display- mb-0 text-capitalize">Search Traffic</h6>
+                            </div>
+                        </div>
+
+                        <form id="searchForm" th:action="@{/sentry/monitor/list}">
+                            <div class="row mb-1">
+                                <div class="col-md-3">
+                                    <label for="countID">Number of Items</label>
+                                    <select aria-label="Default select example" class="form-select" id="countID"
+                                            name="count">
+                                        <option selected value="0">Show Last n Traffic</option>
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="targetGateIDInput">Target Gate</label>
+                                    <select aria-label="Default select example" class="form-select"
+                                            id="targetGateIDInput"
+                                            name="targetGateID">
+                                        <option selected>Select a Gate</option>
+                                        <th:block th:each="gateItem : ${gatesList}">
+                                            <option th:text="${gateItem.gateName}" th:value="${gateItem.gateId}">...
+                                            </option>
+                                        </th:block>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <button class="btn btn-link text-danger text-gradient" type="submit">
+                                        <i class="material-icons text-2xl">search</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card-body">
+                        <div id="trafficList" th:fragment="content">
+                            <div class="col-md-9 d" th:if="${error != null}">
+                                <div class="alert alert-warning" role="alert" th:text="${error}">...</div>
+                            </div>
+                            <!--    Content        -->
+                            <div class="card h-100 mb-4">
+                                <div class="card-header pb-0 px-3">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="mb-0">Gate Live Traffic</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-4 p-3" id="timeline">
+                                    <div th:if="${trafficList.size() == 0}">No Data Available</div>
+                                    <th:block th:each="row,iStat: ${trafficList}">
+                                        <ul th:replace="fragments/components::trafficItem(gateId=${row.gateId},
+                                        perid=${row.personnelId},time=${row.timeStamp},success=${row.wasSuccessful},action=${row.action})"></ul>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:include="fragments/Layout :: basic_script">Imported Content!</th:block>
+
+<script id="template" type="text/html">
+    <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
+        <div class="d-flex align-items-center">
+            <div class="col mb-0 me-3 p-1 btn-sm d-flex align-items-center justify-content-center"
+                 data-innerHTML="icon">
+            </div>
+            <div class="d-flex flex-column">
+                <span class="mb-2 text-xs" th:inline="text">[[${'Gate Id:'}]]
+                    <span class="text-dark font-weight-bold ms-sm-2" data-content-text="gateid"></span>
+                </span>
+                <span class="mb-2 text-xs" th:inline="text">[[${'Personnel Number:'}]]
+                    <span class="text-dark font-weight-bold ms-sm-2" data-content-text="perid"></span>
+                </span>
+                <span class="text-xs" data-content-text="time">27 March 2020, at 12:30 PM</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-danger text-gradient text-sm font-weight-bold"
+             data-content-text="action">
+        </div>
+    </li>
+</script>
+
+<script th:inline="javascript">
+
+    let stomp = null;
+    let trafficLimit = $('#countID');
+
+    $("#searchForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(), {method: 'get'})
+            .then(response => response.text())
+            .then(data => {
+                $("#trafficList").html(data);
+                submitBtn.prop('disabled', false);
+            });
+    });
+
+    function connect() {
+        stomp = webstomp.over(new SockJS('/socket-ap'));
+        stomp.connect({}, function (frame) {
+            stomp.subscribe('/live-update/periodic', function (response) {
+                addEntry(response);
+            });
+        });
+    }
+
+    function addEntry(response) {
+        const myObj = JSON.parse(response.body);
+        test2(myObj.gateId, myObj.personnelId, myObj.action, myObj.timeStamp, myObj.wasSuccessful);
+    }
+
+    function test2(gateId, personnelId, action, timeStamp, wasSuccessful) {
+
+        let list = $('#timeline');
+
+        if (list.children().length >= parseInt(trafficLimit.find(":selected").text(), 10)) {
+            list.children().last().remove();
+        }
+
+        let iconVal;
+        if (wasSuccessful === true) {
+            if (action === 'ENTER') {
+                iconVal = '<i class="material-icons text-lg text-success">input</i>';
+            }
+            if (action === 'EXIT') {
+                iconVal = '<i class="material-icons text-lg text-warning">output</i>';
+            }
+        } else {
+            iconVal = '<i class="material-icons text-lg text-danger">report_gmailerrorred</i>'
+        }
+
+        list.loadTemplate($('#template'),
+            {gateid: gateId, perid: personnelId, time: timeStamp, action: action, icon: iconVal},
+            {prepend: true});
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+        connect();
+    });
+
+</script>
+
+</body>
+
+</html>

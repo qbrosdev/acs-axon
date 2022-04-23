@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Components</title>
+</head>
+<body>
+
+<!--           th:field="*{__${modelAtr}__}"-->
+<div class="mb-1" th:fragment="validInput (name,label)" th:with="type=${type}?:'text'">
+    <label class="form-label" th:for="${name}" th:text="${label}"></label>
+    <input class="form-control border" required th:id="${name}" th:name="${name}" th:type="${type}" th:value="${val}"/>
+    <div class="valid-feedback" th:if="${validMsg !=null}" th:text="${validMsg}"></div>
+    <div class="invalid-feedback" th:if="${inValidMsg !=null}" th:text="${inValidMsg}"></div>
+</div>
+
+<th:block th:fragment="KeyValue(key,value)">
+    <span class="mb-2 text-sm">
+        <span th:text="${key}"></span>
+        <span class="text-dark font-weight-bold ms-sm-2 text-capitalize" th:text="${value}"></span>
+    </span>
+</th:block>
+
+<th:block th:fragment="KeyValueWithClassSelector(key,value,selectorClass)">
+    <span class="mb-2 text-sm">
+        <span th:text="${key}"></span>
+        <span class="text-dark font-weight-bold ms-sm-2 text-capitalize" th:classappend="${selectorClass}"
+              th:text="${value}"></span>
+    </span>
+</th:block>
+
+<!--####################################3-->
+
+<th:block th:fragment="dialogHeader(title)">
+    <h5 class="modal-title" th:text="${title}"></h5>
+    <button aria-label="Close" class="btn-close text-secondary" data-bs-dismiss="modal" type="button">
+        <i class="material-icons me-2">close</i>
+    </button>
+</th:block>
+
+<th:block th:fragment="dialogHeaderWarn(title)">
+    <i class="material-icons me-2  text-lg text-warning">report</i>
+    <h5 class="modal-title text-warning" th:text="${title}"></h5>
+    <button aria-label="Close" class="btn-close text-secondary" data-bs-dismiss="modal" type="button">
+        <i class="material-icons me-2">close</i>
+    </button>
+</th:block>
+
+<th:block th:fragment="dialogHeaderDanger(title)">
+    <i class="material-icons me-2  text-lg text-danger">report</i>
+    <h5 class="modal-title text-danger" th:text="${title}"></h5>
+    <button aria-label="Close" class="btn-close text-secondary" data-bs-dismiss="modal" type="button">
+        <i class="material-icons me-2">close</i>
+    </button>
+</th:block>
+
+<!-- ############################  -->
+<th:block th:fragment="dialogConfirm">
+    <button class="btn btn-outline-black" data-bs-dismiss="modal" th:text="#{dialogConfirm.cancel}"
+            type="button"></button>
+    <button class="btn btn-outline-primary" th:text="#{dialogConfirm.ok}" type="submit"></button>
+</th:block>
+
+<th:block th:fragment="editDialogConfirm">
+    <button class="btn btn-outline-black" data-bs-dismiss="modal" th:text="#{editDialogConfirm.cancel}"
+            type="button"></button>
+    <button class="btn btn-outline-primary" th:text="#{editDialogConfirm.ok}" type="submit"></button>
+</th:block>
+
+<th:block th:fragment="createDialogConfirm">
+    <button class="btn btn-outline-black btn-block" th:text="#{createDialogConfirm.cancel}" type="reset"></button>
+    <button class="btn btn-outline-primary btn-block" th:text="#{createDialogConfirm.ok}" type="submit"></button>
+</th:block>
+
+<!-- ############################  -->
+<li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg"
+    th:fragment="trafficItem (gateId,perid,time,success,action)">
+    <div class="d-flex align-items-center">
+        <div class="col mb-0 me-3 p-1 btn-sm d-flex align-items-center justify-content-center">
+            <i class="material-icons text-lg text-warning" th:if="${success} and ${action.exit}">output</i>
+            <i class="material-icons text-lg text-success" th:if="${success} and ${action.enter}">input</i>
+            <i class="material-icons text-lg text-danger" th:if="${!success}">report_gmailerrorred</i>
+        </div>
+        <div class="d-flex flex-column">
+
+            <span class="mb-2 text-xs" th:inline="text">[[${'Gate Id:'}]]
+                <span class="text-dark font-weight-bold ms-sm-2" th:text="${gateId}"></span>
+            </span>
+
+            <span class="mb-2 text-xs" th:inline="text">[[${'Personnel Number:'}]]
+                <span class="text-dark font-weight-bold ms-sm-2" th:text="${perid}"></span>
+            </span>
+
+            <span class="text-xs" th:text="${time}">27 March 2020, at 12:30 PM</span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center text-primary text-sm font-weight-bold" th:text="${action}">
+    </div>
+</li>
+
+
+</body>
+</html>

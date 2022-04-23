@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <th:block th:include="fragments/Layout :: head_basic">Imported Content!</th:block>
+    <!--  SocketJS -->
+    <script th:src="@{/webjars/sockjs-client/1.0.2/sockjs.min.js}"></script>
+    <!-- StompJS -->
+    <script th:src="@{/webjars/webstomp-client/1.2.6/dist/webstomp.js}"></script>
+    <title th:text="#{main.title}"></title>
+</head>
+
+<body class="g-sidenav-show  bg-gray-200">
+<!-- Side Nav   -->
+<aside th:replace="fragments/Navbars :: nav_dashboard_side"></aside>
+
+<main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <!-- Nav   -->
+    <nav th:replace="fragments/Navbars :: nav_top(#{main.nav.title},#{main.nav.crum})"></nav>
+    <!--Main content-->
+    <div class="container-fluid px-2 px-md-4">
+        <div class="row mt-4 mx-1">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="display-6">Hi,&nbsp;
+                        <span class="text-capitalize" th:text="${#authentication.getName()}"> </span></h2>
+                </div>
+            </div>
+        </div>
+
+        <div id="systemStatusID" th:fragment="systemStatus">
+            <div class="row mt-4">
+
+                <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                    <div class="card border-radius-xs" id="totalPersonnelId">
+                        <!--    Card Header     -->
+                        <div class="card-header p-3 pt-2">
+                            <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xs mt-n4 position-absolute">
+                                <i class="material-icons opacity-10">people_alt</i>
+                            </div>
+                            <div class="text-end pt-1">
+                                <p class="text-sm mb-0 text-capitalize">total number of personnel</p>
+                                <h4 class="mb-0 card-title" th:text="${systemSummary.countTotalPersonnel}"></h4>
+                            </div>
+                        </div>
+                        <hr class="dark horizontal my-0">
+                        <!--    Card Footer     -->
+                        <div class="card-footer p-3">
+                            <a class="mb-0 btn-link" style="cursor: pointer" th:href="@{/manager/personnel}">
+                                <span class="text-sm font-weight-bolder text-uppercase">Personnel List</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                    <div class="card border-radius-xs" id="presentPersonnelId">
+                        <!--    Card Header     -->
+                        <div class="card-header p-3 pt-2">
+                            <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xs mt-n4 position-absolute">
+                                <i class="material-icons opacity-10">hail</i>
+                            </div>
+                            <div class="text-end pt-1">
+                                <p class="text-sm mb-0 text-capitalize">present personnel</p>
+                                <h4 class="mb-0 card-title" th:text="${systemSummary.countPresentPersonnel}"></h4>
+                            </div>
+                        </div>
+                        <hr class="dark horizontal my-0">
+                        <!--    Card Footer     -->
+                        <div class="card-footer p-3">
+                            <p class="mb-0">
+                                <span class="text-sm font-weight-bolder"
+                                      th:text="${systemSummary.personnelPresentPercent}">NA</span>
+                                <span class="text-sm">% are Present</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+                    <div class="card border-radius-xs" id="totalGatesId">
+                        <!--    Card Header     -->
+                        <div class="card-header p-3 pt-2">
+                            <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xs mt-n4 position-absolute">
+                                <i class="material-icons opacity-10">door_sliding</i>
+                            </div>
+                            <div class="text-end pt-1">
+                                <p class="text-sm mb-0 text-capitalize">total number of gates</p>
+                                <h4 class="mb-0 card-title" th:text="${systemSummary.countTotalGates}"></h4>
+                            </div>
+                        </div>
+                        <hr class="dark horizontal my-0">
+                        <!--    Card Footer     -->
+                        <div class="card-footer p-3">
+                            <a class="mb-0 btn-link" style="cursor: pointer" th:href="@{/manager/gates}">
+                                <span class="text-sm font-weight-bolder text-uppercase">Gates List</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card border-radius-xs" id="activeGatesId">
+                        <!--    Card Header     -->
+                        <div class="card-header p-3 pt-2">
+                            <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xs mt-n4 position-absolute">
+                                <i class="material-icons opacity-10">room_preferences</i>
+                            </div>
+                            <div class="text-end pt-1">
+                                <p class="text-sm mb-0 text-capitalize"> current active gates</p>
+                                <h4 class="mb-0 card-title" th:text="${systemSummary.countActiveGates}"></h4>
+                            </div>
+                        </div>
+                        <hr class="dark horizontal my-0">
+                        <!--    Card Footer     -->
+                        <div class="card-footer p-3">
+                            <p class="mb-0">
+                                <span class="text-sm font-weight-bolder"
+                                      th:text="${systemSummary.gateActivePercent}">NA</span>
+                                <span class="text-sm">% is active</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!--    Gate History        -->
+            <div class="col-lg-5 col-md-6 mt-4 mb-4">
+                <div class="card z-index-2">
+                    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+                        <div class="bg-gradient-primary shadow-primary border-radius-lg py-3 pe-1">
+                            <div class="chart">
+                                <canvas class="chart-canvas" height="170" id="chart-line"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-0">Gate Activity</h6>
+                        <p class="text-sm ">Total activities of each gate (Successful and Unsuccessful).</p>
+                        <hr class="dark horizontal">
+                        <div class="d-flex ">
+                            <i class="material-icons text-sm my-auto me-1">schedule</i>
+                            <p class="mb-0 text-sm" id="gateHistoryUpdateId"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-4 mb-3">
+                <div class="card z-index-2">
+                    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+                        <div class="bg-gradient-primary shadow-primary border-radius-lg py-3 pe-1">
+                            <div class="chart">
+                                <canvas class="chart-canvas" height="170" id="chart-pie"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-0">Gate Type</h6>
+                        <p class="text-sm ">Share of Gate types in the system</p>
+                        <hr class="dark horizontal">
+                        <div class="d-flex ">
+                            <i class="material-icons text-sm my-auto me-1">schedule</i>
+                            <p class="mb-0 text-sm" id="gateTypeUpdateId"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<th:block th:include="fragments/Layout :: basic_script">Imported Content!</th:block>
+
+<!--   Core JS Files   -->
+<script th:src="@{/assets/js/plugins/chartjs.min.js}"></script>
+
+<script>
+    let stomp = null;
+    const chart1 = initBarChart(document.getElementById("chart-line").getContext("2d"), "", [], []);
+    const chart2 = initPieChart(document.getElementById("chart-pie").getContext("2d"), [], [], []);
+
+    function connect() {
+        stomp = webstomp.over(new SockJS('/socket-ap'));
+        stomp.connect({}, function (frame) {
+            stomp.subscribe('/live-update/summary', function (response) {
+                updateSummary(JSON.parse(response.body));
+            });
+        });
+    }
+
+    function updateSummary(summary) {
+        $("#totalPersonnelId").find('.card-title').text(summary.countTotalPersonnel);
+        $("#presentPersonnelId").find('.card-title').text(summary.countPresentPersonnel);
+        $("#totalGatesId").find('.card-title').val(summary.countTotalGates);
+        $("#activeGatesId").find('.card-title').text(summary.countActiveGates);
+    }
+
+    function initBarChart(ctx, xLabel, labels, values) {
+        return new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: xLabel,
+                    tension: 0.4,
+                    borderWidth: 0,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    backgroundColor: "#FFFFFFCC",
+                    data: values,
+                    maxBarThickness: 6
+                },],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            drawBorder: false,
+                            display: true,
+                            drawOnChartArea: true,
+                            drawTicks: false,
+                            borderDash: [5, 5],
+                            color: '#FFFFFF33'
+                        },
+                        ticks: {
+                            suggestedMin: 0,
+                            suggestedMax: 500,
+                            beginAtZero: true,
+                            padding: 5,
+                            font: {
+                                size: 14,
+                                weight: 300,
+                                family: "Roboto",
+                                style: 'normal',
+                                lineHeight: 2
+                            },
+                            color: "#fff"
+                        },
+                    },
+                    x: {
+                        grid: {
+                            drawBorder: false,
+                            display: true,
+                            drawOnChartArea: true,
+                            drawTicks: false,
+                            borderDash: [5, 5],
+                            color: '#FFFFFF33'
+                        },
+                        ticks: {
+                            display: true,
+                            color: '#f8f9fa',
+                            padding: 10,
+                            font: {
+                                size: 14,
+                                weight: 300,
+                                family: "Roboto",
+                                style: 'normal',
+                                lineHeight: 2
+                            },
+                        }
+                    },
+                },
+            },
+        });
+    }
+
+    function initPieChart(ctx, labels, values, colors) {
+        return new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Dataset 1',
+                        data: values,
+                        backgroundColor: colors,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            color: '#f8f9fa'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            },
+        });
+    }
+
+    function drawTotalGateTrafficChart() {
+        fetch('/gatesTrafficSummary')
+            .then(response => response.json())
+            .then(data => {
+                chart1._metasets[0]._dataset.data = data.trafficCount;
+                chart1.data.labels = data.gateId;
+                chart1.update();
+                $("#gateHistoryUpdateId").text(data.updateTime);
+            });
+    }
+
+    function drawGateTypesChar() {
+        fetch('/gateTypesSummary')
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                chart2._metasets[0]._dataset.data = data.count;
+                chart2._metasets[0]._dataset.backgroundColor = ['#4dc9f6', '#166a8f', '#4dc9f6'];
+                chart2.data.labels = data.gateTypes;
+                chart2.update();
+                $("#gateTypeUpdateId").text(data.updateTime);
+            })
+    }
+
+    setInterval(drawTotalGateTrafficChart, 60000);
+    setInterval(drawGateTypesChar, 30000);
+
+    window.addEventListener('DOMContentLoaded', function () {
+        connect();
+        fetchFragment('/summary', "systemStatusID");
+        drawTotalGateTrafficChart();
+        drawGateTypesChar();
+    });
+
+</script>
+
+</body>
+</html>

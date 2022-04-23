@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <th:block th:include="fragments/Layout :: head_basic">Imported Content!</th:block>
+    <!--  SocketJS -->
+    <script th:src="@{/webjars/sockjs-client/1.0.2/sockjs.min.js}"></script>
+    <!-- StompJS -->
+    <script th:src="@{/webjars/webstomp-client/1.2.6/dist/webstomp.js}"></script>
+    <title th:text="#{gate.title}"></title>
+</head>
+
+<!--Add Modal-->
+<div aria-hidden="true" aria-labelledby="addModalLabel" class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--   Modal Head         -->
+            <div class="modal-header" id="addModalLabel">
+                <th:block th:replace="fragments/components :: dialogHeader('Add')"></th:block>
+            </div>
+            <form class="needs-validation" id="addModalForm" novalidate th:action="@{/manager/gates/add}">
+                <!--   Modal Body         -->
+                <div class="modal-body">
+                    <div th:replace="fragments/components::validInput(label='Gate Id',type='number', name='gateId')"></div>
+                    <div th:replace="fragments/components::validInput(label='Gate Name', name='gateName')"></div>
+                    <div>
+                        <label class="form-label" for="gateTypesId">Gate Type</label>
+                        <select aria-label="multiple select example" class="form-select" id="gateTypesId"
+                                name="selectedGateType">
+                            <th:block th:each="gateType : ${newGate.gateType}">
+                                <option th:selected="${gateType.value}" th:text="${gateType.key}"
+                                        th:value="${gateType.key}">...
+                                </option>
+                            </th:block>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="optionsId">Allowed Personnel</label>
+                        <select aria-label="multiple select example" class="form-select" id="optionsId" multiple
+                                name="options">
+                            <th:block th:each="auth : ${newGate.authorizationList}">
+                                <option th:selected="${auth.allowed}" th:text="${auth.fullName}"
+                                        th:value="${auth.personnelId}">...
+                                </option>
+                            </th:block>
+                        </select>
+                    </div>
+                </div>
+                <!--   Modal Footer         -->
+                <div class="modal-footer">
+                    <th:block th:replace="fragments/components :: createDialogConfirm"></th:block>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Edit Modal-->
+<div aria-hidden="true" aria-labelledby="editModalLabel" class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--  Modal Head         -->
+            <div class="modal-header" id="editModalLabel">
+                <th:block th:replace="fragments/components :: dialogHeader('Edit')"></th:block>
+            </div>
+            <form class="needs-validation" id="editModalForm" novalidate th:action="@{/manager/gates/edit}">
+                <!--   Modal Body         -->
+                <div class="modal-body" id="editContent">
+                    <div th:fragment="editDialog">
+                        <input name="gateId" th:value="${editGate.gateId}" type="hidden">
+                        <div th:replace="fragments/components::validInput(label='Gate Name', name='gateName', val=${editGate.gateName})"></div>
+                        <div>
+                            <label class="form-label" for="gateTypesId">Gate Type</label>
+                            <select aria-label="multiple select example" class="form-select" id="gateTypesId"
+                                    name="selectedGateType">
+                                <th:block th:each="gateType : ${editGate.gateType}">
+                                    <option th:selected="${gateType.value}" th:text="${gateType.key}"
+                                            th:value="${gateType.key}">
+                                    </option>
+                                </th:block>
+                            </select>
+                        </div>
+                        <label class="form-label" th:for="options">Allowed Personnel</label>
+                        <select aria-label="multiple select example" class="form-select" multiple name="options">
+                            <th:block th:each="auth : ${editGate.authorizationList}">
+                                <option th:selected="${auth.allowed}" th:text="${auth.fullName}"
+                                        th:value="${auth.personnelId}">...
+                                </option>
+                            </th:block>
+                        </select>
+                    </div>
+                </div>
+                <!--   Modal Footer         -->
+                <div class="modal-footer">
+                    <th:block th:replace="fragments/components :: editDialogConfirm"></th:block>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Delete Confirm Modal-->
+<div aria-hidden="true" class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <th:block th:replace="fragments/components :: dialogHeaderDanger('Delete')"></th:block>
+            </div>
+            <div class="modal-body">
+                <form id="deleteModalForm" th:action="@{/manager/gates/delete}">
+                    <input hidden name="gateId"/>
+                    <div>
+                        <div class="modal-body">Confirm <strong>Delete</strong>?</div>
+                    </div>
+                    <div class="modal-footer">
+                        <th:block th:replace="fragments/components :: dialogConfirm"></th:block>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Deactivate Confirm Modal-->
+<div aria-hidden="true" class="modal fade" id="deactivateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <th:block th:replace="fragments/components :: dialogHeaderWarn('Deactivate')"></th:block>
+            </div>
+            <div class="modal-body">
+                <form id="deactivateModalForm" th:action="@{/manager/gates/deactivate}">
+                    <input hidden name="gateId"/>
+                    <div>
+                        <div class="modal-body">Confirm<strong>Deactivation</strong>?</div>
+                    </div>
+                    <div class="modal-footer">
+                        <th:block th:replace="fragments/components :: dialogConfirm"></th:block>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--activate Confirm Modal-->
+<div aria-hidden="true" class="modal fade" id="activateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <th:block th:replace="fragments/components :: dialogHeaderWarn('Activate')"></th:block>
+            </div>
+            <div class="modal-body">
+                <form id="activateModalForm" th:action="@{/manager/gates/activate}">
+                    <input hidden name="gateId"/>
+                    <div>
+                        <div class="modal-body">Confirm<strong>Deactivation</strong>?</div>
+                    </div>
+                    <div class="modal-footer">
+                        <th:block th:replace="fragments/components :: dialogConfirm"></th:block>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--syncModal Confirm Modal-->
+<div aria-hidden="true" class="modal fade" id="syncModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <th:block th:replace="fragments/components :: dialogHeaderWarn('Synchronise')"></th:block>
+            </div>
+            <div class="modal-body">
+                <form id="syncModalForm" th:action="@{/manager/gates/sync}">
+                    <input hidden name="gateId"/>
+                    <div>
+                        <div class="modal-body">Confirm<strong>Synchronise</strong>?</div>
+                    </div>
+                    <div class="modal-footer">
+                        <th:block th:replace="fragments/components :: dialogConfirm"></th:block>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<body class="g-sidenav-show  bg-gray-200">
+
+<!-- Side Nav   -->
+<aside th:replace="fragments/Navbars :: nav_dashboard_side"></aside>
+
+<main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <!-- Nav   -->
+    <nav th:replace="fragments/Navbars :: nav_top(#{gate.nav.title},#{gate.nav.crum})"></nav>
+    <!--Main content-->
+    <div class="container pt-3">
+
+        <div class="card h-100">
+            <div class="card-header pb-0">
+                <div class="row mb-2">
+                    <div class="col-auto my-auto">
+                        <div class="h-100">
+                            <h5 class="mb-0 text-capitalize">Gates Management</h5>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3">
+                        <div class="nav-wrapper position-relative end-0">
+                            <ul class="nav nav-pills nav-fill p-1" role="tablist">
+                                <li class="nav-item">
+                                    <button class="btn bg-outline-dark mb-0 shadow-2-soft" data-bs-target="#addModal"
+                                            data-bs-toggle="modal" th:inline="text" type="button">[[${'Add Gate'}]]
+                                        <i class="material-icons text-sm text-danger">add</i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-body">
+                <div class="row">
+                    <div class="row">
+                        <div class="col-12 mt-4">
+                            <div class="mb-5 ps-3">
+                                <h6 class="mb-1">Gates</h6>
+                                <p class="text-sm">Here you can see the list of gates and modify them</p>
+                            </div>
+                            <div id="contentsList" th:fragment="content">
+                                <!--    Notifications        -->
+                                <div class="row">
+                                    <!--    Error        -->
+                                    <div class="col" th:if="${error !=null}">
+                                        <div class="alert alert-warning" role="alert" th:text="${error}">...</div>
+                                    </div>
+                                    <!--    No Content        -->
+                                    <div th:if="${gatesModel.size() == 0}">No Gates Available</div>
+                                </div>
+                                <!--    Contents        -->
+                                <div class="row">
+                                    <th:block th:each="gate, iStat : ${gatesModel}">
+                                        <!--    Gate Item       -->
+                                        <div class="col-xl-4 col-md-6 mb-xl-2 mb-4">
+                                            <div class="gateItem card card-blog card-background-mask-light">
+                                                <!--       Card Head   -->
+                                                <div class="card-header">
+                                                    <div class="d-flex flex-row">
+                                                        <div class="icon icon-shape icon-lg bg-gradient-primary shadow text-center border-radius-lg"
+                                                             th:if="${gate.active}">
+                                                            <i class="material-icons opacity-10">meeting_room</i>
+                                                        </div>
+                                                        <div class="icon icon-shape icon-lg bg-gradient-secondary shadow text-center border-radius-lg"
+                                                             th:if="${!gate.active}">
+                                                            <i class="material-icons opacity-10">no_meeting_room</i>
+                                                        </div>
+                                                        <i class="material-icons opacity-10 text-warning"
+                                                           th:if="${gate.syncStatus.SYNCING}">sync_lock</i>
+                                                        <i class="material-icons opacity-10 text-danger"
+                                                           th:if="${gate.syncStatus.NO_SYNC}">sync_problem</i>
+                                                    </div>
+                                                </div>
+                                                <!--       Card Body   -->
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex flex-column">
+                                                        <h5 th:text="${gate.gateName}"></h5>
+                                                        <th:block
+                                                                th:replace="fragments/components :: KeyValueWithClassSelector('Id',${gate.gateId},'gateListItemGateID')"></th:block>
+                                                        <th:block
+                                                                th:replace="fragments/components :: KeyValue('Name',${gate.gateName})"></th:block>
+                                                        <th:block
+                                                                th:replace="fragments/components :: KeyValue('Type',${gate.gateType})"></th:block>
+                                                        <th:block
+                                                                th:replace="fragments/components :: KeyValue('Sync',${gate.syncStatus})"></th:block>
+                                                    </div>
+                                                </div>
+                                                <!--       Card Footer   -->
+                                                <div class="card-footer mx-0 px-0">
+                                                    <div class="justify-content-center">
+                                                        <a class="btn btn-link text-danger text-gradient px-2 mb-0"
+                                                           hidden
+                                                           onclick="deleteItem(this);">
+                                                            <i class="material-icons text-sm me-2">delete</i>Delete
+                                                        </a>
+                                                        <a class="btn btn-link text-dark px-2 mb-0"
+                                                           onclick="editItem(this);">
+                                                            <i class="material-icons text-sm me-2">edit</i>Edit
+                                                        </a>
+                                                        <a class="btn btn-link text-warning px-2 mb-0"
+                                                           onclick="deactivateItem(this)"
+                                                           th:if="${gate.active}">
+                                                            <i class="material-icons text-sm me-2">do_disturb</i>Deactivate
+                                                        </a>
+                                                        <a class="btn btn-link text-success px-2 mb-0"
+                                                           onclick="activateItem(this)"
+                                                           th:if="${!gate.active}">
+                                                            <i class="material-icons text-sm me-2">arrow_circle_up</i>Activate
+                                                        </a>
+                                                        <a class="btn btn-link text-success px-2 mb-0"
+                                                           onclick="sync(this)"
+                                                           th:if="${gate.syncStatus.NO_SYNC}">
+                                                            <i class="material-icons text-sm me-2">sync</i>Sync
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Toast   -->
+    <div class="position-fixed bottom-1 end-1 z-index-2">
+        <div aria-atomic="true" aria-live="assertive" class="toast fade hide p-2 mt-2 bg-gradient-info" id="infoToast"
+             role="alert">
+            <div class="toast-header bg-transparent border-0">
+                <i class="material-icons text-white me-2">notifications</i>
+                <span class="title me-auto text-white font-weight-bold">Title</span>
+                <small class=" time text-white"></small>
+                <i aria-label="Close" class="fas fa-times text-md text-white ms-3 cursor-pointer"
+                   data-bs-dismiss="toast"></i>
+            </div>
+            <hr class="horizontal light m-0">
+            <div class="toast-body text-white">
+                <span class="message"></span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:include="fragments/Layout :: basic_script">Imported Content!</th:block>
+
+<script th:inline="javascript">
+
+    let stomp = null;
+    var token1 = $('meta[name=_csrf]').attr('content');
+
+    function connect() {
+        stomp = webstomp.over(new SockJS('/socket-ap'));
+        stomp.connect({}, function (frame) {
+            stomp.subscribe('/live-update/syncCompleted', function (response) {
+                summary = JSON.parse(response.body);
+                showToast('Gate sync completed!', 'Gate: ' + summary.gateName + 'with id: ' + summary.gateId)
+            });
+        });
+    }
+
+    function showToast(title, message) {
+        const toast = $('.toast');
+        toast.find('.title').text(title);
+        toast.find('.message').text(message);
+        toast.toast('show');
+    }
+
+    const deleteModal = $("#deleteModal");
+    const editModal = $("#editModal");
+    const deactivateModal = $("#deactivateModal");
+    const activateModal = $("#activateModal");
+    const syncModal = $("#syncModal");
+
+    function fetchPersonListPage() {
+        fetchFragment('/manager/gates/list', "contentsList")
+    }
+
+    function deleteItem(item) {
+        const gateID = getCurrentRowGateId(item);
+        openConfirmModal(deleteModal, 'Delete Gate:' + gateID, gateID);
+    }
+
+    function deactivateItem(item) {
+        const gateID = getCurrentRowGateId(item);
+        openConfirmModal(deactivateModal, 'Deactivate Gate:' + gateID, gateID);
+    }
+
+    function activateItem(item) {
+        const gateID = getCurrentRowGateId(item);
+        openConfirmModal(activateModal, 'Activate Gate:' + gateID, gateID);
+    }
+
+    function sync(item) {
+        const gateID = getCurrentRowGateId(item);
+        openConfirmModal(syncModal, 'Sync Gate:' + gateID, gateID);
+    }
+
+    function openConfirmModal(modal, title, value) {
+        modal.find('.modal-title').text(title);
+        modal.find("[name='gateId']").val(value);
+        modal.modal('show');
+    }
+
+    function editItem(item) {
+        const gateID = getCurrentRowGateId(item);
+        editModal.find('.modal-title').text('Edit Gate: ' + gateID);
+        fetch('/manager/gates/getById' + '?' + $.param({idx: gateID}),
+            {method: 'get'})
+            .then(response => response.text())
+            .then(data => {
+                $("#editContent").html(data);
+                editModal.modal('show');
+            })
+    }
+
+    function getCurrentRowGateId(item) {
+        return $(item).closest('.gateItem').find('.gateListItemGateID').text();
+    }
+
+    $("#addModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#contentsList").html(data);
+                submitBtn.prop('disabled', false);
+                $("#addModal").modal("hide");
+            })
+    });
+
+    $("#editModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#contentsList").html(data);
+                submitBtn.prop('disabled', false);
+                editModal.modal("hide");
+            })
+    });
+
+    $("#deleteModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#contentsList").html(data);
+                submitBtn.prop('disabled', false);
+                deleteModal.modal("hide");
+            })
+    });
+
+    $("#deactivateModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#contentsList").html(data);
+                submitBtn.prop('disabled', false);
+                deactivateModal.modal("hide");
+            })
+    });
+
+    $("#activateModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => response.text())
+            .then(data => {
+                $("#contentsList").html(data);
+                submitBtn.prop('disabled', false);
+                activateModal.modal("hide");
+            })
+    });
+
+    $("#syncModalForm").submit(function (e) {
+        e.preventDefault();
+        const submitBtn = $(this).find(":submit");
+        submitBtn.prop('disabled', true);
+        fetch(e.currentTarget.action + '?' + $(this).serialize(),
+            {
+                method: 'post',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': token1}
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Notification', 'Gate sync Started!');
+                } else {
+                    showToast('Notification', 'Sync Operation Failed');
+                }
+            })
+            .finally(() => {
+                submitBtn.prop('disabled', false);
+                syncModal.modal("hide");
+            });
+    });
+
+    window.addEventListener('DOMContentLoaded', function () {
+        connect();
+        fetchPersonListPage();
+    });
+
+</script>
+
+</body>
+
+</html>
