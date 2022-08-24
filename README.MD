@@ -138,11 +138,11 @@ Simply execute the docker-compose file.
 
     docker-compose up
 
-It will spin up all the services 
-
-You should see the following entry in the axon server logs: 
+It will spin up all the services and you should see the following entry in the axon server logs: 
 
     Axon Server Gateway started on port: 8124
+
+Then all the services will have access to Axon Command and Query gateways. 
 
 ## Run On Local Filesystem
 
@@ -151,9 +151,10 @@ This approach involves two steps:
 1. Run Axon Server
 2. Run the Application
 
-### Run Axon Server
+### Download and Run Axon Server
 
-Before running the application you should run the Axon server. Extract the AxonServer-4.5.10.zip and 
+Before running the application you should [download](https://developer.axoniq.io/download) and run the Axon server (version 4.5.10+).
+Extract the AxonServer-4.5.10.zip and 
 navigate to the 'AxonServer-4.5.10' directory and run the Axon server.
 
     java -jar axonserver.jar
