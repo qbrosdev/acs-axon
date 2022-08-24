@@ -30,7 +30,7 @@ This simple Access control system is based divided into 4 main submodules:
 
 ### Using Axon Framework
 
-<img src="./images/1.jpg" width="100%" height="100%"  alt="Overview"/>
+<img src="./images/1.png" width="100%" height="100%"  alt="Overview"/>
 
 As you can see, different modules of the system utilize three communications buses:
 
@@ -67,7 +67,7 @@ looses connection with the server then it can at least perform some basic authen
 (NOTE: I did not implement the actual FTP communication). However, the Synchronisation service notifies the Gate
 aggregate via internal events about the synchronisation status.
 
-<img src="./images/2.jpg" width="50%" height="50%"  alt="Overview"/>
+<img src="./images/2.png" width="50%" height="50%"  alt="Overview"/>
 
 ## Authentication Service (acs-authentication module)
 
@@ -128,7 +128,30 @@ Also, you  intellij and you can load the project in the IDE and run it directly 
 
 # How to RUN
 
-## Run Axon Server
+After building the project we have two approahes to run it:
+1. Run on Docker
+2. Run On Local Filesystem
+
+## Run on Docker
+
+Simply execute the docker-compose file.
+
+    docker-compose up
+
+It will spin up all the services 
+
+You should see the following entry in the axon server logs: 
+
+    Axon Server Gateway started on port: 8124
+
+## Run On Local Filesystem
+
+This approach involves two steps:
+
+1. Run Axon Server
+2. Run the Application
+
+### Run Axon Server
 
 Before running the application you should run the Axon server. Extract the AxonServer-4.5.10.zip and 
 navigate to the 'AxonServer-4.5.10' directory and run the Axon server.
@@ -139,7 +162,7 @@ You should see an output like this:
 
 <img src="./images/axon.jpg" width="30%" height="30%"  alt="img"/>
 
-## Run the Application
+### Run the Application
 
 Navigate to each individual module and start them dependently in any order. A docker compose file will be added later but for now you can run the services in the following suggested order.
 
@@ -150,10 +173,16 @@ Navigate to each individual module and start them dependently in any order. A do
     java -jar .\acs-auth\target\acs-auth-1.0.0.jar
     java -jar .\acs-reports\target\acs-auth-1.0.0.jar
 
+
+# How to Use
+
 After running all the services, navigate to,
 and you can use one of the following credentials to login:
 
+> ☝ 
+> 
 > Username: admin, Pass: pass
+> 
 > Username: user, Pass:pass
 
 Since the **admin has more privileged access,** use the admin to log in.
@@ -161,6 +190,12 @@ Since the **admin has more privileged access,** use the admin to log in.
 In the Dashboard page you can see an overview of the system.
 
 <img src="./images/dash.jpg" width="30%" height="30%"  alt="img"/>
+
+## Adding Data
+
+> ☝
+> **NOTE**: Due to setting up process of Command handlers, initial data entry might be slow but the remaining entries will be quick 
+
 
 Navigate to the [Personnel List page](http://localhost:8081/manager/personnel) and add new personnel.
 

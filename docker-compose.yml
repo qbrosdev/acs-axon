@@ -1,0 +1,78 @@
+version: "3"
+services:
+
+  #axon server
+  axoniqserver:
+    image: axoniq/axonserver:4.5.10
+    hostname: axonserver
+    container_name: axonserver
+    ports:
+      - '8024:8024'  # For HTTP web  http://localhost:8024/actuator/info
+      - '8124:8124'  # For GRPC
+#      - '8224:8224'  # internal-port: gRPC port for communication between Axon Server nodes within a cluster (Axon EE only).
+
+  # authentication service that queries acs-gate and acs-personnel service to check authorisation
+  acs-auth:
+    build:
+      context: ./acs-auth
+    image: acs-aut:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    ports:
+      - '8083:8083'
+    depends_on:
+      - acs-gate
+      - acs-personnel
+#      - acs-query   # this dependency is optional because all the emitted signal will be stored
+
+  # service that manages access control gate
+  acs-gate:
+    build:
+      context: ./acs-gate
+    image: acs-gate:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    depends_on:
+      - axoniqserver
+
+  # service that manages personnel
+  acs-personnel:
+    build:
+      context: ./acs-personnel
+    image: acs-personnel:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    depends_on:
+      - axoniqserver
+
+  # View of the current state of the system, and queried by the acs-ui service
+  acs-query:
+    build:
+      context: ./acs-query
+    image: acs-query:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    depends_on:
+      - axoniqserver
+
+   # web ui service
+  acs-ui:
+    build:
+      context: ./acs-ui
+    image: acs-ui:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    ports:
+      - '8081:8081'
+    depends_on:
+      - acs-query
+
+  # Mimics a data analysis service that we can add to our project and it cna have access to all the events since the beginning
+  acs-reports:
+    build:
+      context: ./acs-reports
+    image: acs-reports:latest
+    command:
+      - '--AXONIQ_SERVER=axoniqserver'
+    depends_on:
+      - acs-query

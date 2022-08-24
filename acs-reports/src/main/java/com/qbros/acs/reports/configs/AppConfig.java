@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppConfig {
 
+    /*
+     * https://discuss.axoniq.io/t/getting-xstream-dependency-exception/3634
+     */
     @Bean
     public XStream xStream() {
         XStream xStream = new XStream();

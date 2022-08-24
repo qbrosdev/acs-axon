@@ -47,6 +47,10 @@
             </dependency>
 
             <dependency>
+
+<!--                <groupId>org.axonframework</groupId>-->
+<!--                <artifactId>axon-spring-boot-starter</artifactId>-->
+
                 <groupId>org.axonframework</groupId>
                 <artifactId>axon-bom</artifactId>
                 <version>${axon.version}</version>
